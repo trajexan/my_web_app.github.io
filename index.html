@@ -13,8 +13,7 @@
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
-            /* Enforce portrait 16:9 aspect ratio */
-            max-width: 56.25vh; /* 9/16 of height (100vh) = 56.25vh */
+            max-width: 56.25vh;
             margin: auto;
             overflow: hidden;
         }
@@ -24,6 +23,15 @@
             align-items: center;
             width: 100%;
             padding: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
         }
         input {
             margin-bottom: 10px;
@@ -46,13 +54,47 @@
         button:hover {
             background-color: #0056b3;
         }
+        #tableContainer {
+            margin-top: 20px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 1000px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <input type="file" id="excelFile" accept=".xlsx, .xls">
         <input id="textInput" type="text" placeholder="Type here...">
         <button id="helloButton">Click Me</button>
+        <div id="tableContainer"></div>
     </div>
-    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        document.getElementById('helloButton').addEventListener('click', function() {
+            window.location.href = 'table.html';
+        });
+
+        document.getElementById('textInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                const text = this.value.trim();
+                if (text) {
+                    alert(text.toUpperCase());
+                }
+            }
+        });
+    </script>
 </body>
 </html>
