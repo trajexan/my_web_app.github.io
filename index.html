@@ -83,6 +83,14 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        // Load saved input on page load (optional local backup)
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedInput = localStorage.getItem('userInput');
+            if (savedInput) {
+                document.getElementById('textInput').value = savedInput;
+            }
+        });
+
         document.getElementById('helloButton').addEventListener('click', function() {
             window.location.href = 'table.html';
         });
@@ -91,7 +99,22 @@
             if (event.key === 'Enter' || event.keyCode === 13) {
                 const text = this.value.trim();
                 if (text) {
-                    alert(text.toUpperCase());
+                    // Send to Google Sheet via Apps Script
+                    fetch('https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec', { // Replace with your web app URL
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'text=' + encodeURIComponent(text)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.result === 'success') {
+                            alert('Data saved to Google Sheet!');
+                            localStorage.setItem('userInput', text); // Optional: Save locally too
+                        } else {
+                            alert('Error saving data');
+                        }
+                    })
+                    .catch(error => alert('Network error: ' + error));
                 }
             }
         });
