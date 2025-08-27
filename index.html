@@ -13,6 +13,26 @@
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            /* Enforce portrait 16:9 aspect ratio */
+            max-width: 56.25vh; /* 9/16 of height (100vh) = 56.25vh */
+            margin: auto;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
         }
         button {
             padding: 15px 30px;
@@ -29,7 +49,10 @@
     </style>
 </head>
 <body>
-    <button id="helloButton">Click Me</button>
+    <div class="container">
+        <input id="textInput" type="text" placeholder="Type here...">
+        <button id="helloButton">Click Me</button>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
