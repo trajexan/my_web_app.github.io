@@ -83,9 +83,20 @@
         th {
             background-color: #f2f2f2;
         }
+        #version {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
+    <div id="version">v1.0.0</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -98,6 +109,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        // Fallback local jsQR (save this as jsQR.min.js in the same directory if needed)
+        /*
+        (function(){ ... }) // Minified jsQR code here if CDN fails
+        */
         document.addEventListener('DOMContentLoaded', function() {
             // Element references
             const video = document.getElementById('video');
@@ -129,10 +144,10 @@
 
             // Verify jsQR is loaded
             if (typeof jsQR === 'undefined') {
-                updateDebugStatus('Error: jsQR library not loaded');
+                updateDebugStatus('Error: jsQR library not loaded. Check CDN or use local copy.');
                 return;
             }
-            updateDebugStatus('jsQR loaded, initializing camera...');
+            updateDebugStatus('jsQR v1.4.0 loaded, initializing camera...');
 
             // QR Code Scanner
             const context = canvas.getContext('2d');
@@ -174,7 +189,7 @@
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                     const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: 'dontInvert' // Optimize for speed
+                        inversionAttempts: 'dontInvert'
                     });
                     if (code) {
                         qrResult.value = code.data;
@@ -183,8 +198,8 @@
                         // video.srcObject.getTracks().forEach(track => track.stop());
                         return; // Stop scanning after detection
                     }
-                    // Update status periodically to avoid clutter
-                    if (Math.random() < 0.1) { // 10% chance to update
+                    // Update status periodically
+                    if (Math.random() < 0.1) {
                         updateDebugStatus('Scanning... No QR code detected');
                     }
                 } else {
