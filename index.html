@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -90,17 +90,18 @@
             position: fixed;
             top: 10px;
             left: 10px;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: bold;
             color: #000;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             padding: 5px 10px;
             border-radius: 3px;
-            z-index: 1000; /* Ensure visibility */
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div id="version">v1.0.0</div>
+    <div id="version">v1.0.1</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -110,7 +111,8 @@
         <button id="helloButton">Click Me</button>
         <div id="tableContainer"></div>
     </div>
-    <script src="jsQR.min.js"></script>
+    <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -131,7 +133,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.0.0');
+                console.log('Version div loaded: v1.0.1');
             }
 
             // Helper function to update debug status
@@ -146,12 +148,16 @@
                 textInput.value = savedInput;
             }
 
+            // Start camera regardless of jsQR
+            updateDebugStatus('Initializing camera...');
+            startCamera();
+
             // Verify jsQR is loaded
             if (typeof jsQR === 'undefined') {
-                updateDebugStatus('Error: jsQR library not loaded. Ensure jsQR.min.js is in the project directory.');
+                updateDebugStatus('Error: jsQR library not loaded. Ensure jsQR.js is in C:\\Users\\cws265\\hello_app or check CDN.');
                 return;
             }
-            updateDebugStatus('jsQR v1.4.0 loaded, initializing camera...');
+            updateDebugStatus('jsQR v1.4.0 loaded, starting QR scanner...');
 
             // QR Code Scanner
             const context = canvas.getContext('2d');
@@ -160,14 +166,17 @@
                 return;
             }
 
-            // Try rear camera, fallback to front camera
             function startCamera(facingMode = 'environment') {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode } })
                     .then(stream => {
                         video.srcObject = stream;
                         video.play();
                         updateDebugStatus('Camera started (facing: ' + facingMode + ')');
-                        scanQRCode();
+                        if (typeof jsQR !== 'undefined') {
+                            scanQRCode();
+                        } else {
+                            updateDebugStatus('Camera running but jsQR not loaded');
+                        }
                     })
                     .catch(err => {
                         if (facingMode === 'environment') {
@@ -211,9 +220,6 @@
                 }
                 requestAnimationFrame(scanQRCode);
             }
-
-            // Start camera
-            startCamera();
 
             // Restart scanning on textbox click
             qrResult.addEventListener('click', function() {
@@ -270,3 +276,4 @@
     </script>
 </body>
 </html>
+```
