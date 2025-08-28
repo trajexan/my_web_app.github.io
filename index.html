@@ -83,7 +83,7 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // Load saved input on page load (optional local backup)
+        // Load saved input on page load
         document.addEventListener('DOMContentLoaded', function() {
             const savedInput = localStorage.getItem('userInput');
             if (savedInput) {
@@ -92,6 +92,22 @@
         });
 
         document.getElementById('helloButton').addEventListener('click', function() {
+            // Log click time to Google Sheet
+            fetch('https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec', { // Replace with your click log URL
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result === 'success') {
+                    console.log('Click time logged');
+                } else {
+                    console.log('Error logging click time');
+                }
+            })
+            .catch(error => console.log('Network error: ' + error));
+
+            // Redirect to table.html
             window.location.href = 'table.html';
         });
 
@@ -100,7 +116,7 @@
                 const text = this.value.trim();
                 if (text) {
                     // Send to Google Sheet via Apps Script
-                    fetch('https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec', { // Replace with your web app URL
+                    fetch('https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec', { // Replace with your input URL
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: 'text=' + encodeURIComponent(text)
@@ -109,7 +125,7 @@
                     .then(data => {
                         if (data.result === 'success') {
                             alert('Data saved to Google Sheet!');
-                            localStorage.setItem('userInput', text); // Optional: Save locally too
+                            localStorage.setItem('userInput', text); // Optional local save
                         } else {
                             alert('Error saving data');
                         }
