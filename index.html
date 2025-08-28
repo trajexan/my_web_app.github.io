@@ -24,14 +24,15 @@
             width: 100%;
             padding: 20px;
         }
-        input[type="file"] {
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+        video {
             width: 80%;
             max-width: 300px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        canvas {
+            display: none; /* Hidden canvas for processing */
         }
         input {
             margin-bottom: 10px;
@@ -76,11 +77,14 @@
 </head>
 <body>
     <div class="container">
-        <input type="file" id="excelFile" accept=".xlsx, .xls">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        <input id="qrResult" type="text" placeholder="Scanned QR Code" readonly>
         <input id="textInput" type="text" placeholder="Type here...">
         <button id="helloButton">Click Me</button>
         <div id="tableContainer"></div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Load saved input on page load
@@ -89,11 +93,53 @@
             if (savedInput) {
                 document.getElementById('textInput').value = savedInput;
             }
+
+            // QR Code Scanner
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            const qrResult = document.getElementById('qrResult');
+
+            // Access camera
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+                    scanQRCode();
+                })
+                .catch(err => {
+                    console.error('Camera error: ', err);
+                    qrResult.value = 'Camera access denied';
+                });
+
+            function scanQRCode() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    // Set canvas size to video size
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    // Draw video frame on canvas
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    // Get image data
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    // Scan for QR code
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    if (code) {
+                        qrResult.value = code.data; // Display QR code data
+                        // Stop scanning (optional: comment out to continue scanning)
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                        return;
+                    }
+                }
+                // Continue scanning
+                requestAnimationFrame(scanQRCode);
+            }
         });
 
         document.getElementById('helloButton').addEventListener('click', function() {
+            // Show alert
+            alert('Hello World');
             // Log click time to Google Sheet
-            fetch('https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec', { // Replace with your click log URL
+            fetch('https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             })
@@ -106,7 +152,6 @@
                 }
             })
             .catch(error => console.log('Network error: ' + error));
-
             // Redirect to table.html
             window.location.href = 'table.html';
         });
@@ -115,8 +160,10 @@
             if (event.key === 'Enter' || event.keyCode === 13) {
                 const text = this.value.trim();
                 if (text) {
+                    // Show alert with uppercase text
+                    alert(text.toUpperCase());
                     // Send to Google Sheet via Apps Script
-                    fetch('https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec', { // Replace with your input URL
+                    fetch('https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: 'text=' + encodeURIComponent(text)
