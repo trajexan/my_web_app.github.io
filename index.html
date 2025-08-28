@@ -1,9 +1,12 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Hello World App</title>
     <style>
         body {
@@ -87,11 +90,12 @@
             position: fixed;
             top: 10px;
             left: 10px;
-            font-size: 12px;
-            color: #333;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px;
+            font-size: 14px;
+            color: #000;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
             border-radius: 3px;
+            z-index: 1000; /* Ensure visibility */
         }
     </style>
 </head>
@@ -106,13 +110,9 @@
         <button id="helloButton">Click Me</button>
         <div id="tableContainer"></div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+    <script src="jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // Fallback local jsQR (save this as jsQR.min.js in the same directory if needed)
-        /*
-        (function(){ ... }) // Minified jsQR code here if CDN fails
-        */
         document.addEventListener('DOMContentLoaded', function() {
             // Element references
             const video = document.getElementById('video');
@@ -121,6 +121,7 @@
             const textInput = document.getElementById('textInput');
             const helloButton = document.getElementById('helloButton');
             const debugStatus = document.getElementById('debugStatus');
+            const version = document.getElementById('version');
 
             // Check for missing elements
             if (!video) { updateDebugStatus('Error: Video element not found'); return; }
@@ -129,6 +130,9 @@
             if (!textInput) { updateDebugStatus('Error: textInput element not found'); return; }
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
+            if (!version) { updateDebugStatus('Error: version element not found'); } else {
+                console.log('Version div loaded: v1.0.0');
+            }
 
             // Helper function to update debug status
             function updateDebugStatus(message) {
@@ -144,7 +148,7 @@
 
             // Verify jsQR is loaded
             if (typeof jsQR === 'undefined') {
-                updateDebugStatus('Error: jsQR library not loaded. Check CDN or use local copy.');
+                updateDebugStatus('Error: jsQR library not loaded. Ensure jsQR.min.js is in the project directory.');
                 return;
             }
             updateDebugStatus('jsQR v1.4.0 loaded, initializing camera...');
@@ -266,4 +270,3 @@
     </script>
 </body>
 </html>
-```
