@@ -162,7 +162,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.9</div>
+    <div id="version">v1.2.10</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -222,7 +222,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.9');
+                console.log('Version div loaded: v1.2.10');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -250,7 +250,7 @@
             // QR Code Scanner with ZXing
             const codeReader = new ZXing.BrowserMultiFormatReader();
             function startCamera(facingMode = 'environment') {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } } })
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(s => {
                         stream = s;
                         track = s.getTracks()[0];
