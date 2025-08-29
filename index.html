@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -98,23 +97,76 @@
             border-radius: 3px;
             z-index: 1000;
         }
+        .input-container {
+            display: flex;
+            align-items: center;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 10px;
+        }
+        .clear-button {
+            margin-left: 5px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #successTick {
+            margin-left: 5px;
+            color: green;
+        }
+        #userInputTable {
+            border-collapse: collapse;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 10px;
+        }
+        #userInputTable th, #userInputTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #userInputTable th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
-    <div id="version">v1.1.0</div>
+    <div id="version">v1.2.1</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
         <div id="debugStatus">Initializing...</div>
+        <label for="qrResult" style="margin-bottom: 5px;">Scan Result: </label>
         <input id="qrResult" type="text" placeholder="Scanned QR Code" readonly>
-        <input id="textInput" type="text" placeholder="Type here...">
+        <div class="input-container">
+            <input id="textInput" type="text" placeholder="Type here...">
+            <span id="successTick" style="display: none;">✓</span>
+            <button class="clear-button" id="clearInput">x</button>
+        </div>
         <button id="helloButton">Click Me</button>
         <div id="tableContainer"></div>
+        <h3>Latest 5 User Input from google sheet</h3>
+        <table id="userInputTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Input</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <p id="lastRetrieveTime">Last retrieve time: </p>
     </div>
     <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        // Google Apps Script URLs
+        const CLICK_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec'; // Logs button click timestamps to Google Sheet
+        const TEXT_INPUT_URL = 'https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec'; // Logs text input to UserInputSheet
+        const FETCH_DATA_URL = 'https://script.google.com/macros/s/AKfycbxwMTC9TgeLB5xutbWEDvCDJE_ihKRqSX8_DDjBuTjB8bt5qESMZTlYa2nfIcUNXdyW/exec'; // Fetches last 5 inputs from UserInputSheet
+
         document.addEventListener('DOMContentLoaded', function() {
             // Element references
             const video = document.getElementById('video');
@@ -124,6 +176,8 @@
             const helloButton = document.getElementById('helloButton');
             const debugStatus = document.getElementById('debugStatus');
             const version = document.getElementById('version');
+            const successTick = document.getElementById('successTick');
+            const clearInput = document.getElementById('clearInput');
 
             // Check for missing elements
             if (!video) { updateDebugStatus('Error: Video element not found'); return; }
@@ -133,7 +187,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.1.0');
+                console.log('Version div loaded: v1.2.1');
             }
 
             // Helper function to update debug status
@@ -232,7 +286,7 @@
             // Button click handler
             helloButton.addEventListener('click', function() {
                 alert('Hello World');
-                fetch('https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec', {
+                fetch(CLICK_LOG_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                 })
@@ -254,7 +308,7 @@
                     const text = this.value.trim();
                     if (text) {
                         alert(text.toUpperCase());
-                        fetch('https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec', {
+                        fetch(TEXT_INPUT_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: 'text=' + encodeURIComponent(text)
@@ -262,7 +316,9 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.result === 'success') {
-                                alert('Data saved to Google Sheet!');
+                                // alert('Data saved to Google Sheet!'); // Commented out
+                                successTick.style.display = 'inline';
+                                setTimeout(() => { successTick.style.display = 'none'; }, 3000);
                                 localStorage.setItem('userInput', text);
                             } else {
                                 alert('Error saving data');
@@ -272,8 +328,34 @@
                     }
                 }
             });
+
+            // Clear input button
+            clearInput.addEventListener('click', function() {
+                textInput.value = '';
+                localStorage.removeItem('userInput');
+                successTick.style.display = 'none';
+            });
+
+            // Fetch user inputs from Google Sheet
+            function fetchUserInputs() {
+                fetch(FETCH_DATA_URL)
+                    .then(response => response.json())
+                    .then(data => {
+                        const tableBody = document.getElementById('userInputTable').getElementsByTagName('tbody')[0];
+                        tableBody.innerHTML = '';
+                        data.slice(-5).forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${row.Timestamp || ''}</td><td>${row.Input || ''}</td>`;
+                            tableBody.appendChild(tr);
+                        });
+                        document.getElementById('lastRetrieveTime').textContent = 'Last retrieve time: ' + new Date().toLocaleString();
+                    })
+                    .catch(error => console.log('Error fetching data: ' + error));
+            }
+
+            fetchUserInputs();
+            setInterval(fetchUserInputs, 10000);
         });
     </script>
 </body>
 </html>
-```
