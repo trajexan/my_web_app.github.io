@@ -165,7 +165,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.7</div>
+    <div id="version">v1.2.8</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -195,8 +195,6 @@
         </table>
         <p id="lastRetrieveTime">Last retrieve time: </p>
     </div>
-    <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -227,7 +225,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.7');
+                console.log('Version div loaded: v1.2.8');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -252,7 +250,8 @@
             let track = null;
             startCamera();
 
-            // QR Code Scanner with jsQR
+            // QR Code Scanner with ZXing
+            const codeReader = new ZXing.BrowserMultiFormatReader();
             function startCamera(facingMode = 'environment') {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(s => {
@@ -261,11 +260,7 @@
                         video.srcObject = stream;
                         video.play();
                         updateDebugStatus('Camera started (facing: ' + facingMode + ')');
-                        if (typeof jsQR !== 'undefined') {
-                            scanQRCode();
-                        } else {
-                            updateDebugStatus('Camera running but jsQR not loaded');
-                        }
+                        scanQRCode();
                     })
                     .catch(err => {
                         if (facingMode === 'environment') {
@@ -279,34 +274,18 @@
             }
 
             function scanQRCode() {
-                updateDebugStatus('Scanning for QR code...');
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    if (canvas.width === 0 || canvas.height === 0) {
-                        updateDebugStatus('Invalid video dimensions: ' + canvas.width + 'x' + canvas.height);
-                        requestAnimationFrame(scanQRCode);
-                        return;
-                    }
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: 'attemptBoth'
-                    });
-                    if (code) {
-                        qrResult.value = code.data;
-                        updateDebugStatus('QR Code Detected: ' + code.data);
+                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                    if (result) {
+                        qrResult.value = result.text;
+                        updateDebugStatus('Code Detected: ' + result.text);
                         stopCamera();
                         return;
                     }
-                    // Update status periodically
-                    if (Math.random() < 0.1) {
-                        updateDebugStatus('Scanning... No QR code detected');
+                    if (err && !(err instanceof ZXing.NotFoundException)) {
+                        console.error(err);
+                        updateDebugStatus('Scanning error: ' + err.message);
                     }
-                } else {
-                    updateDebugStatus('Video not ready: state ' + video.readyState);
-                }
-                requestAnimationFrame(scanQRCode);
+                }).catch(err => console.error(err));
             }
 
             function stopCamera() {
