@@ -16,7 +16,6 @@
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
-            max-width: 56.25vh;
             margin: auto;
             overflow: hidden;
         }
@@ -139,10 +138,34 @@
             font-size: 14px;
             margin-bottom: 3px;
         }
+        /* Portrait orientation adjustments */
+        @media (orientation: portrait) {
+            body {
+                max-width: 100vw;
+            }
+            .container {
+                gap: 3px;
+            }
+            video {
+                max-height: 25vh;
+            }
+            input, button {
+                font-size: 16px;
+            }
+            label, h3 {
+                font-size: 16px;
+            }
+            p {
+                font-size: 14px;
+            }
+            th, td {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="version">v1.2.6</div>
+    <div id="version">v1.2.7</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -172,6 +195,8 @@
         </table>
         <p id="lastRetrieveTime">Last retrieve time: </p>
     </div>
+    <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -202,7 +227,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.6');
+                console.log('Version div loaded: v1.2.7');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -227,8 +252,7 @@
             let track = null;
             startCamera();
 
-            // QR Code Scanner with ZXing
-            const codeReader = new ZXing.BrowserMultiFormatReader();
+            // QR Code Scanner with jsQR
             function startCamera(facingMode = 'environment') {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(s => {
@@ -237,7 +261,11 @@
                         video.srcObject = stream;
                         video.play();
                         updateDebugStatus('Camera started (facing: ' + facingMode + ')');
-                        scanQRCode();
+                        if (typeof jsQR !== 'undefined') {
+                            scanQRCode();
+                        } else {
+                            updateDebugStatus('Camera running but jsQR not loaded');
+                        }
                     })
                     .catch(err => {
                         if (facingMode === 'environment') {
@@ -251,18 +279,34 @@
             }
 
             function scanQRCode() {
-                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                    if (result) {
-                        qrResult.value = result.text;
-                        updateDebugStatus('QR Code Detected: ' + result.text);
+                updateDebugStatus('Scanning for QR code...');
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    if (canvas.width === 0 || canvas.height === 0) {
+                        updateDebugStatus('Invalid video dimensions: ' + canvas.width + 'x' + canvas.height);
+                        requestAnimationFrame(scanQRCode);
+                        return;
+                    }
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'attemptBoth'
+                    });
+                    if (code) {
+                        qrResult.value = code.data;
+                        updateDebugStatus('QR Code Detected: ' + code.data);
                         stopCamera();
                         return;
                     }
-                    if (err && !(err instanceof ZXing.NotFoundException)) {
-                        console.error(err);
-                        updateDebugStatus('Scanning error: ' + err.message);
+                    // Update status periodically
+                    if (Math.random() < 0.1) {
+                        updateDebugStatus('Scanning... No QR code detected');
                     }
-                }).catch(err => console.error(err));
+                } else {
+                    updateDebugStatus('Video not ready: state ' + video.readyState);
+                }
+                requestAnimationFrame(scanQRCode);
             }
 
             function stopCamera() {
