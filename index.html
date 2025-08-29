@@ -1,4 +1,3 @@
-<xaiArtifact artifact_id="a689f545-3b6d-4808-9e02-cc8d890156b6" artifact_version_id="af2d1ada-909f-4eb6-810d-434a37ef9444" title="index.html" contentType="text/html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -275,7 +274,6 @@
             }
 
             function scanQRCode() {
-                const zoom = 2.0; // Digital zoom for small codes
                 codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
                     if (result) {
                         qrResult.value = result.text;
@@ -410,4 +408,3 @@
     </script>
 </body>
 </html>
-</xaiArtifact>
