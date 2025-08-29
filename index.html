@@ -142,7 +142,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.4</div>
+    <div id="version">v1.2.5</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -199,7 +199,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.4');
+                console.log('Version div loaded: v1.2.5');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -236,7 +236,7 @@
             }
 
             function startCamera(facingMode = 'environment') {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode } })
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(stream => {
                         video.srcObject = stream;
                         video.play();
@@ -271,7 +271,7 @@
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                     const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: 'dontInvert'
+                        inversionAttempts: 'attemptBoth'
                     });
                     if (code) {
                         qrResult.value = code.data;
