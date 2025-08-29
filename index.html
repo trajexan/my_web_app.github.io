@@ -171,8 +171,8 @@
     <script>
         // Google Apps Script URLs
         const CLICK_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec'; // Logs button click timestamps to ClickLogSheet
-        const TEXT_INPUT_URL = 'https://script.google.com/macros/s/AKfycbxwMTC9TgeLB5xutbWEDvCDJE_ihKRqSX8_DDjBuTjB8bt5qESMZTlYa2nfIcUNXdyW/exec'; // Logs text input to UserInputSheet
-        const FETCH_DATA_URL = 'https://script.google.com/macros/s/AKfycbxwMTC9TgeLB5xutbWEDvCDJE_ihKRqSX8_DDjBuTjB8bt5qESMZTlYa2nfIcUNXdyW/exec'; // Fetches last 5 inputs from UserInputSheet
+        const TEXT_INPUT_URL = 'https://script.google.com/macros/s/AKfycbxu8hLb6A8RaoXuxfto6NLUFUM-R9amT2yYzetGGX-miqzZ5SDfV3b3y6RmdUfah-5Z/exec'; // Logs text input to UserInputSheet
+        const FETCH_DATA_URL = 'https://script.google.com/macros/s/AKfycbxu8hLb6A8RaoXuxfto6NLUFUM-R9amT2yYzetGGX-miqzZ5SDfV3b3y6RmdUfah-5Z/exec'; // Fetches last 5 inputs from UserInputSheet
 
         document.addEventListener('DOMContentLoaded', function() {
             // Element references
@@ -195,7 +195,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.2');
+                console.log('Version div loaded: v1.2.3');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
