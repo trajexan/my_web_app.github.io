@@ -114,6 +114,12 @@
         #successTick {
             margin-left: 5px;
             color: green;
+            display: none;
+        }
+        #loadingIcon {
+            margin-left: 5px;
+            color: #007bff;
+            display: none;
         }
         #userInputTable {
             border-collapse: collapse;
@@ -132,7 +138,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.1</div>
+    <div id="version">v1.2.2</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -141,7 +147,8 @@
         <input id="qrResult" type="text" placeholder="Scanned QR Code" readonly>
         <div class="input-container">
             <input id="textInput" type="text" placeholder="Type here...">
-            <span id="successTick" style="display: none;">✓</span>
+            <span id="loadingIcon">⏳</span>
+            <span id="successTick">✓</span>
             <button class="clear-button" id="clearInput">x</button>
         </div>
         <button id="helloButton">Click Me</button>
@@ -151,7 +158,7 @@
             <thead>
                 <tr>
                     <th>Timestamp</th>
-                    <th>Input</th>
+                    <th>User Input</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -163,8 +170,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Google Apps Script URLs
-        const CLICK_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec'; // Logs button click timestamps to Google Sheet
-        const TEXT_INPUT_URL = 'https://script.google.com/macros/s/AKfycbwLl7O9bcGmntDLr45Yt-wQDD3VC6sWTIAYDZrtv-b3xiKMggmS2SYbNKaIwF-rfFlf/exec'; // Logs text input to UserInputSheet
+        const CLICK_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec'; // Logs button click timestamps to ClickLogSheet
+        const TEXT_INPUT_URL = 'https://script.google.com/macros/s/AKfycbxwMTC9TgeLB5xutbWEDvCDJE_ihKRqSX8_DDjBuTjB8bt5qESMZTlYa2nfIcUNXdyW/exec'; // Logs text input to UserInputSheet
         const FETCH_DATA_URL = 'https://script.google.com/macros/s/AKfycbxwMTC9TgeLB5xutbWEDvCDJE_ihKRqSX8_DDjBuTjB8bt5qESMZTlYa2nfIcUNXdyW/exec'; // Fetches last 5 inputs from UserInputSheet
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -177,6 +184,7 @@
             const debugStatus = document.getElementById('debugStatus');
             const version = document.getElementById('version');
             const successTick = document.getElementById('successTick');
+            const loadingIcon = document.getElementById('loadingIcon');
             const clearInput = document.getElementById('clearInput');
 
             // Check for missing elements
@@ -187,8 +195,11 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.1');
+                console.log('Version div loaded: v1.2.2');
             }
+            if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
+            if (!successTick) { console.log('Error: successTick element not found'); }
+            if (!clearInput) { console.log('Error: clearInput element not found'); }
 
             // Helper function to update debug status
             function updateDebugStatus(message) {
@@ -307,7 +318,9 @@
                 if (event.key === 'Enter' || event.keyCode === 13) {
                     const text = this.value.trim();
                     if (text) {
-                        alert(text.toUpperCase());
+                        // alert(text.toUpperCase()); // Commented out
+                        loadingIcon.style.display = 'inline';
+                        successTick.style.display = 'none';
                         fetch(TEXT_INPUT_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -315,8 +328,8 @@
                         })
                         .then(response => response.json())
                         .then(data => {
+                            loadingIcon.style.display = 'none';
                             if (data.result === 'success') {
-                                // alert('Data saved to Google Sheet!'); // Commented out
                                 successTick.style.display = 'inline';
                                 setTimeout(() => { successTick.style.display = 'none'; }, 3000);
                                 localStorage.setItem('userInput', text);
@@ -324,7 +337,10 @@
                                 alert('Error saving data');
                             }
                         })
-                        .catch(error => alert('Network error: ' + error));
+                        .catch(error => {
+                            loadingIcon.style.display = 'none';
+                            alert('Network error: ' + error);
+                        });
                     }
                 }
             });
@@ -334,6 +350,7 @@
                 textInput.value = '';
                 localStorage.removeItem('userInput');
                 successTick.style.display = 'none';
+                loadingIcon.style.display = 'none';
             });
 
             // Fetch user inputs from Google Sheet
@@ -345,12 +362,15 @@
                         tableBody.innerHTML = '';
                         data.slice(-5).forEach(row => {
                             const tr = document.createElement('tr');
-                            tr.innerHTML = `<td>${row.Timestamp || ''}</td><td>${row.Input || ''}</td>`;
+                            tr.innerHTML = `<td>${row.Timestamp || ''}</td><td>${row['User Input'] || ''}</td>`;
                             tableBody.appendChild(tr);
                         });
                         document.getElementById('lastRetrieveTime').textContent = 'Last retrieve time: ' + new Date().toLocaleString();
                     })
-                    .catch(error => console.log('Error fetching data: ' + error));
+                    .catch(error => {
+                        console.log('Error fetching data: ' + error);
+                        document.getElementById('lastRetrieveTime').textContent = 'Last retrieve time: Error fetching data';
+                    });
             }
 
             fetchUserInputs();
