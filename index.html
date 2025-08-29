@@ -248,9 +248,11 @@
             startCamera();
 
             // QR Code Scanner with ZXing
-            const codeReader = new ZXing.BrowserMultiFormatReader();
+            const hints = new Map();
+            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+            const codeReader = new ZXing.BrowserMultiFormatReader(hints);
             function startCamera(facingMode = 'environment') {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { min: 1920 }, height: { min: 1080 } } })
                     .then(s => {
                         stream = s;
                         track = s.getTracks()[0];
