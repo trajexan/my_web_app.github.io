@@ -163,7 +163,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.11</div>
+    <div id="version">v1.2.12</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -223,7 +223,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.11');
+                console.log('Version div loaded: v1.2.12');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -275,6 +275,7 @@
             }
 
             function scanQRCode() {
+                const zoom = 2.0; // Digital zoom for small codes
                 codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
                     if (result) {
                         qrResult.value = result.text;
