@@ -1,3 +1,4 @@
+<xaiArtifact artifact_id="a689f545-3b6d-4808-9e02-cc8d890156b6" artifact_version_id="af2d1ada-909f-4eb6-810d-434a37ef9444" title="index.html" contentType="text/html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -162,7 +163,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.10</div>
+    <div id="version">v1.2.11</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -222,7 +223,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.10');
+                console.log('Version div loaded: v1.2.11');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -250,9 +251,10 @@
             // QR Code Scanner with ZXing
             const hints = new Map();
             hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E, ZXing.BarcodeFormat.CODE_39, ZXing.BarcodeFormat.ITF]);
             const codeReader = new ZXing.BrowserMultiFormatReader(hints);
             function startCamera(facingMode = 'environment') {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { min: 1920 }, height: { min: 1080 } } })
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(s => {
                         stream = s;
                         track = s.getTracks()[0];
@@ -407,3 +409,4 @@
     </script>
 </body>
 </html>
+</xaiArtifact>
