@@ -162,7 +162,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.2.13</div>
+    <div id="version">v1.2.14</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -222,7 +222,7 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.13');
+                console.log('Version div loaded: v1.2.14');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
@@ -330,15 +330,15 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.result === 'success') {
-                        console.log('Click time logged');
-                    } else {
-                        console.log('Error logging click time');
-                    }
-                })
-                .catch(error => console.log('Network error: ' + error));
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.result === 'success') {
+                            console.log('Click time logged');
+                        } else {
+                            console.log('Error logging click time');
+                        }
+                    })
+                    .catch(error => console.log('Network error: ' + error));
                 window.location.href = 'table.html';
             });
 
