@@ -13,10 +13,11 @@
             justify-content: center;
             align-items: center;
             height: 100dvh;
-            width: 100vw;
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            max-width: 56.25vh;
+            margin: auto;
             overflow: hidden;
         }
         .container {
@@ -138,40 +139,16 @@
             font-size: 14px;
             margin-bottom: 3px;
         }
-        /* Portrait orientation adjustments */
-        @media (orientation: portrait) {
-            .container {
-                gap: 3px;
-            }
-            video {
-                max-height: 30vh;
-            }
-            input, button {
-                font-size: 16px;
-            }
-            label, h3 {
-                font-size: 16px;
-            }
-            p {
-                font-size: 14px;
-            }
-            th, td {
-                font-size: 14px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div id="version">v1.2.14</div>
+    <div id="version">v1.2.5</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
         <div id="debugStatus">Initializing...</div>
         <label for="qrResult" style="margin-bottom: 3px;">Scan Result: </label>
-        <div class="input-container">
-            <input id="qrResult" type="text" placeholder="Scanned QR Code" readonly>
-            <button class="clear-button" id="clearQrResult">x</button>
-        </div>
+        <input id="qrResult" type="text" placeholder="Scanned QR Code" readonly>
         <div class="input-container">
             <input id="textInput" type="text" placeholder="Type here...">
             <span id="loadingIcon">⏳</span>
@@ -192,7 +169,8 @@
         </table>
         <p id="lastRetrieveTime">Last retrieve time: </p>
     </div>
-    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Google Apps Script URLs
@@ -212,7 +190,6 @@
             const successTick = document.getElementById('successTick');
             const loadingIcon = document.getElementById('loadingIcon');
             const clearInput = document.getElementById('clearInput');
-            const clearQrResult = document.getElementById('clearQrResult');
 
             // Check for missing elements
             if (!video) { updateDebugStatus('Error: Video element not found'); return; }
@@ -222,12 +199,11 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                console.log('Version div loaded: v1.2.14');
+                console.log('Version div loaded: v1.2.5');
             }
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
             if (!clearInput) { console.log('Error: clearInput element not found'); }
-            if (!clearQrResult) { console.log('Error: clearQrResult element not found'); }
 
             // Helper function to update debug status
             function updateDebugStatus(message) {
@@ -243,24 +219,33 @@
 
             // Start camera regardless of jsQR
             updateDebugStatus('Initializing camera...');
-            let stream = null;
-            let track = null;
             startCamera();
 
-            // QR Code Scanner with ZXing
-            const hints = new Map();
-            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E, ZXing.BarcodeFormat.CODE_39, ZXing.BarcodeFormat.ITF]);
-            const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+            // Verify jsQR is loaded
+            if (typeof jsQR === 'undefined') {
+                updateDebugStatus('Error: jsQR library not loaded. Ensure jsQR.js is in C:\\Users\\cws265\\hello_app or check CDN.');
+                return;
+            }
+            updateDebugStatus('jsQR v1.4.0 loaded, starting QR scanner...');
+
+            // QR Code Scanner
+            const context = canvas.getContext('2d');
+            if (!context) {
+                updateDebugStatus('Error: Failed to get canvas context');
+                return;
+            }
+
             function startCamera(facingMode = 'environment') {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
-                    .then(s => {
-                        stream = s;
-                        track = s.getTracks()[0];
+                    .then(stream => {
                         video.srcObject = stream;
                         video.play();
                         updateDebugStatus('Camera started (facing: ' + facingMode + ')');
-                        scanQRCode();
+                        if (typeof jsQR !== 'undefined') {
+                            scanQRCode();
+                        } else {
+                            updateDebugStatus('Camera running but jsQR not loaded');
+                        }
                     })
                     .catch(err => {
                         if (facingMode === 'environment') {
@@ -274,52 +259,42 @@
             }
 
             function scanQRCode() {
-                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                    if (result) {
-                        qrResult.value = result.text;
-                        updateDebugStatus('Code Detected: ' + result.text);
-                        stopCamera();
+                updateDebugStatus('Scanning for QR code...');
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    if (canvas.width === 0 || canvas.height === 0) {
+                        updateDebugStatus('Invalid video dimensions: ' + canvas.width + 'x' + canvas.height);
+                        requestAnimationFrame(scanQRCode);
                         return;
                     }
-                    if (err && !(err instanceof ZXing.NotFoundException)) {
-                        console.error(err);
-                        updateDebugStatus('Scanning error: ' + err.message);
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'attemptBoth'
+                    });
+                    if (code) {
+                        qrResult.value = code.data;
+                        updateDebugStatus('QR Code Detected: ' + code.data);
+                        // Optional: Stop camera (uncomment for single scan)
+                        // video.srcObject.getTracks().forEach(track => track.stop());
+                        return; // Stop scanning after detection
                     }
-                }).catch(err => console.error(err));
-            }
-
-            function stopCamera() {
-                if (track) {
-                    track.stop();
+                    // Update status periodically
+                    if (Math.random() < 0.1) {
+                        updateDebugStatus('Scanning... No QR code detected');
+                    }
+                } else {
+                    updateDebugStatus('Video not ready: state ' + video.readyState);
                 }
+                requestAnimationFrame(scanQRCode);
             }
-
-            function resumeCamera() {
-                qrResult.value = '';
-                startCamera();
-            }
-
-            // Tap to focus
-            video.addEventListener('click', function(e) {
-                if (track && track.applyConstraints) {
-                    const rect = video.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / rect.width;
-                    const y = (e.clientY - rect.top) / rect.height;
-                    track.applyConstraints({
-                        advanced: [{ focusMode: 'manual', focusDistance: 0.5 }]
-                    }).catch(err => console.error('Focus error: ' + err));
-                }
-            });
-
-            // Clear QR result and resume camera
-            clearQrResult.addEventListener('click', function() {
-                resumeCamera();
-            });
 
             // Restart scanning on textbox click
             qrResult.addEventListener('click', function() {
                 if (!video.srcObject) {
-                    resumeCamera();
+                    qrResult.value = 'Scanning QR Code...';
+                    startCamera();
                 }
             });
 
@@ -330,15 +305,15 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.result === 'success') {
-                            console.log('Click time logged');
-                        } else {
-                            console.log('Error logging click time');
-                        }
-                    })
-                    .catch(error => console.log('Network error: ' + error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.result === 'success') {
+                        console.log('Click time logged');
+                    } else {
+                        console.log('Error logging click time');
+                    }
+                })
+                .catch(error => console.log('Network error: ' + error));
                 window.location.href = 'table.html';
             });
 
