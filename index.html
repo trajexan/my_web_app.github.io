@@ -20,7 +20,7 @@
         }
         .upper-part {
             display: flex;
-            height: 40vh; /* Reduced by 20% from 50vh */
+            height: 50vh;
             width: 100%;
         }
         .left-top {
@@ -43,11 +43,11 @@
         .bottom-part {
             display: flex;
             flex-direction: column;
-            height: 40vh; /* Reduced by 20% from 50vh */
+            height: 50vh;
             width: 100%;
         }
         .message-bar {
-            height: 10vh; /* Reduced by 20% from 12.5vh */
+            height: 12.5vh; /* 1/8 of 100vh is 12.5vh */
             width: 100%;
             border: 1px solid #ccc;
             padding: 5px;
@@ -58,7 +58,7 @@
             font-size: 14px;
         }
         .input-box {
-            height: 10vh; /* Reduced by 20% from 12.5vh */
+            height: 12.5vh;
             width: 100%;
             display: flex;
             align-items: center;
@@ -79,12 +79,13 @@
             border-radius: 5px;
             cursor: pointer;
             margin-left: 5px;
+            user-select: none; /* Disable text selection */
         }
         #sendButton:hover {
             background-color: #218838;
         }
         .last-data-box {
-            height: 10vh; /* Reduced by 20% from 12.5vh */
+            height: 12.5vh;
             width: 100%;
             border: 1px solid #ccc;
             padding: 5px;
@@ -92,13 +93,14 @@
             font-size: 14px;
         }
         .capture-button {
-            height: 10vh; /* Reduced by 20% from 12.5vh */
+            height: 12.5vh;
             width: 100%;
             font-size: 18px;
             background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
+            user-select: none; /* Disable text selection */
         }
         .capture-button:hover {
             background-color: #0056b3;
@@ -128,7 +130,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.3.7a</div>
+    <div id="version">v1.3.8</div>
     <div class="upper-part">
         <div class="left-top" id="scannedLog"></div>
         <div class="right-top">
@@ -176,7 +178,7 @@
             if (!messageBar) { console.log('Error: messageBar element not found'); }
             if (!lastDataBox) { messageBar.textContent += '\nError: lastDataBox element not found'; return; }
             if (!version) { messageBar.textContent += '\nError: version element not found'; } else {
-                console.log('Version div loaded: v1.3.7a');
+                console.log('Version div loaded: v1.3.8');
             }
 
             // Load saved input
@@ -302,35 +304,33 @@
                 }
             });
 
-            // Text input handler
-            textInput.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter' || event.keyCode === 13) {
-                    const text = this.value.trim();
-                    if (text) {
-                        loadingIcon.style.display = 'inline';
-                        successTick.style.display = 'none';
-                        fetch(TEXT_INPUT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: 'text=' + encodeURIComponent(text)
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            loadingIcon.style.display = 'none';
-                            if (data.result === 'success') {
-                                successTick.style.display = 'inline';
-                                setTimeout(() => { successTick.style.display = 'none'; }, 3000);
-                                localStorage.setItem('userInput', text);
-                                fetchLastData(); // Update last data box
-                            } else {
-                                alert('Error saving data');
-                            }
-                        })
-                        .catch(error => {
-                            loadingIcon.style.display = 'none';
-                            alert('Network error: ' + error);
-                        });
-                    }
+            // Send button handler
+            sendButton.addEventListener('click', function() {
+                const text = textInput.value.trim();
+                if (text) {
+                    loadingIcon.style.display = 'inline';
+                    successTick.style.display = 'none';
+                    fetch(TEXT_INPUT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'text=' + encodeURIComponent(text)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingIcon.style.display = 'none';
+                        if (data.result === 'success') {
+                            successTick.style.display = 'inline';
+                            setTimeout(() => { successTick.style.display = 'none'; }, 3000);
+                            localStorage.setItem('userInput', text);
+                            fetchLastData(); // Update last data box
+                        } else {
+                            alert('Error saving data');
+                        }
+                    })
+                    .catch(error => {
+                        loadingIcon.style.display = 'none';
+                        alert('Network error: ' + error);
+                    });
                 }
             });
 
