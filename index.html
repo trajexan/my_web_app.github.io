@@ -59,8 +59,14 @@
         #debugStatus {
             font-size: 12px;
             color: #333;
-            text-align: center;
-            display: none; /* Hide by default to save space; uncomment to show */
+            text-align: left;
+            width: 100%;
+            height: 150px; /* Large text box for debug */
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+            background-color: #fff;
+            display: block; /* Always show for debugging */
         }
         #tableContainer {
             overflow-x: auto;
@@ -113,19 +119,6 @@
             color: #007bff;
             display: none;
         }
-        #userInputTable {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        #userInputTable th, #userInputTable td {
-            border: 1px solid #ddd;
-            padding: 4px;
-            text-align: left;
-            font-size: 12px;
-        }
-        #userInputTable th {
-            background-color: #f2f2f2;
-        }
         h3 {
             font-size: 14px;
             margin: 5px 0;
@@ -162,7 +155,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.3.0</div>
+    <div id="version">v1.3.1</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -180,17 +173,6 @@
         </div>
         <button id="helloButton">Click Me</button>
         <div id="tableContainer"></div>
-        <h3>Latest 5 User Input from google sheet</h3>
-        <table id="userInputTable">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>User Input</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <p id="lastRetrieveTime">Last retrieve time: </p>
     </div>
     <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
@@ -231,7 +213,7 @@
 
             // Helper function to update debug status
             function updateDebugStatus(message) {
-                if (debugStatus) debugStatus.textContent = message;
+                if (debugStatus) debugStatus.textContent += '\n' + message;
                 console.log(message);
             }
 
@@ -295,6 +277,7 @@
             }
 
             function fallbackJsQR() {
+                updateDebugStatus('Falling back to jsQR...');
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
                     canvas.height = video.videoHeight;
                     canvas.width = video.videoWidth;
@@ -309,6 +292,9 @@
                         stopCamera();
                         return;
                     }
+                    updateDebugStatus('No QR detected with jsQR');
+                } else {
+                    updateDebugStatus('Video not ready for jsQR fallback');
                 }
                 requestAnimationFrame(scanCode); // Continue scanning
             }
