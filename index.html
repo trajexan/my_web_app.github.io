@@ -67,6 +67,8 @@
             padding: 5px;
             background-color: #fff;
             display: block; /* Always show for debugging */
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
         #tableContainer {
             overflow-x: auto;
@@ -155,7 +157,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.3.2</div>
+    <div id="version">v1.3.3</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -206,16 +208,19 @@
             if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
             if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                updateDebugStatus('Version div loaded: v1.3.2');
+                updateDebugStatus('Version div loaded: v1.3.3');
             }
             if (!loadingIcon) { updateDebugStatus('Error: loadingIcon element not found'); }
             if (!successTick) { updateDebugStatus('Error: successTick element not found'); }
             if (!clearInput) { updateDebugStatus('Error: clearInput element not found'); }
             if (!clearQrResult) { updateDebugStatus('Error: clearQrResult element not found'); }
 
-            // Helper function to update debug status
+            // Helper function to update debug status (prepend new messages)
             function updateDebugStatus(message) {
-                if (debugStatus) debugStatus.textContent += '\n' + message;
+                if (debugStatus) {
+                    debugStatus.textContent = message + '\n' + debugStatus.textContent;
+                    debugStatus.scrollTop = 0; // Stay focused on top row
+                }
                 console.log(message);
             }
 
@@ -258,7 +263,16 @@
                     });
             }
 
+            let lastScanTime = 0;
+            const scanInterval = 2000; // 2 seconds
             function scanCode() {
+                const now = Date.now();
+                if (now - lastScanTime < scanInterval) {
+                    requestAnimationFrame(scanCode);
+                    return;
+                }
+                lastScanTime = now;
+                updateDebugStatus('Starting scan attempt...');
                 codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
                     if (result) {
                         qrResult.value = result.text;
