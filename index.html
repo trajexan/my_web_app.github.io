@@ -157,7 +157,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.3.3</div>
+    <div id="version">v1.3.4</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -173,7 +173,7 @@
             <span id="successTick">✓</span>
             <button class="clear-button" id="clearInput">x</button>
         </div>
-        <button id="helloButton">Click Me</button>
+        <button id="scanButton">Scan Code</button>
         <div id="tableContainer"></div>
     </div>
     <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
@@ -192,7 +192,7 @@
             const canvas = document.getElementById('canvas');
             const qrResult = document.getElementById('qrResult');
             const textInput = document.getElementById('textInput');
-            const helloButton = document.getElementById('helloButton');
+            const scanButton = document.getElementById('scanButton');
             const debugStatus = document.getElementById('debugStatus');
             const version = document.getElementById('version');
             const successTick = document.getElementById('successTick');
@@ -205,11 +205,9 @@
             if (!canvas) { updateDebugStatus('Error: Canvas element not found'); return; }
             if (!qrResult) { updateDebugStatus('Error: qrResult element not found'); return; }
             if (!textInput) { updateDebugStatus('Error: textInput element not found'); return; }
-            if (!helloButton) { updateDebugStatus('Error: helloButton element not found'); return; }
+            if (!scanButton) { updateDebugStatus('Error: scanButton element not found'); return; }
             if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
-            if (!version) { updateDebugStatus('Error: version element not found'); } else {
-                updateDebugStatus('Version div loaded: v1.3.3');
-            }
+            if (!version) { updateDebugStatus('Error: version element not found'); return; }
             if (!loadingIcon) { updateDebugStatus('Error: loadingIcon element not found'); }
             if (!successTick) { updateDebugStatus('Error: successTick element not found'); }
             if (!clearInput) { updateDebugStatus('Error: clearInput element not found'); }
@@ -250,7 +248,6 @@
                         video.srcObject = stream;
                         video.play();
                         updateDebugStatus('Camera started (facing: ' + facingMode + ')');
-                        scanCode();
                     })
                     .catch(err => {
                         if (facingMode === 'environment') {
@@ -263,17 +260,14 @@
                     });
             }
 
-            let lastScanTime = 0;
-            const scanInterval = 2000; // 2 seconds
+            let isScanning = false;
+
             function scanCode() {
-                const now = Date.now();
-                if (now - lastScanTime < scanInterval) {
-                    requestAnimationFrame(scanCode);
-                    return;
-                }
-                lastScanTime = now;
+                if (isScanning) return;
+                isScanning = true;
                 updateDebugStatus('Starting scan attempt...');
                 codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                    isScanning = false;
                     if (result) {
                         qrResult.value = result.text;
                         updateDebugStatus('Code Detected with ZXing: ' + result.text);
@@ -287,6 +281,7 @@
                     // Fallback to jsQR if ZXing fails
                     fallbackJsQR();
                 }).catch(err => {
+                    isScanning = false;
                     console.error(err);
                     updateDebugStatus('ZXing decode error: ' + err);
                 });
@@ -313,7 +308,7 @@
                 } else {
                     updateDebugStatus('Video not ready for jsQR fallback');
                 }
-                requestAnimationFrame(scanCode); // Continue scanning
+                isScanning = false;
             }
 
             function stopCamera() {
@@ -351,7 +346,16 @@
                 }
             });
 
-            // Button click handler
+            // Scan button trigger
+            scanButton.addEventListener('click', function() {
+                if (video.srcObject && !isScanning) {
+                    scanCode();
+                } else {
+                    updateDebugStatus('Camera not ready or already scanning');
+                }
+            });
+
+            // Button click handler (replaced with scan trigger)
             helloButton.addEventListener('click', function() {
                 alert('Hello World');
                 fetch(CLICK_LOG_URL, {
