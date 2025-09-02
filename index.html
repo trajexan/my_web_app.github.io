@@ -157,7 +157,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.3.4</div>
+    <div id="version">v1.3.5</div>
     <div class="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -346,10 +346,23 @@
                 }
             });
 
-            // Scan button trigger
+            // Scan button trigger with 2-second timeout
             scanButton.addEventListener('click', function() {
                 if (video.srcObject && !isScanning) {
+                    const timeoutId = setTimeout(() => {
+                        isScanning = false;
+                        updateDebugStatus('Scan timed out after 2 seconds');
+                    }, 2000);
                     scanCode();
+                    // Clear timeout if scan succeeds
+                    const checkSuccess = () => {
+                        if (!isScanning) {
+                            clearTimeout(timeoutId);
+                        } else {
+                            requestAnimationFrame(checkSuccess);
+                        }
+                    };
+                    checkSuccess();
                 } else {
                     updateDebugStatus('Camera not ready or already scanning');
                 }
