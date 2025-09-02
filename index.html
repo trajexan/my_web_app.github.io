@@ -1,17 +1,3 @@
-### Key Changes Explanation
-- **Library Integration**: Replaced jsQR with ZXing (@zxing/library) via CDN for broader barcode support (QR, Data Matrix, EAN, UPC, Code 128, Code 39). ZXing is more robust and handles multiple formats natively.
-- **Scanning Logic**: Updated `scanQRCode()` to use ZXing's `BrowserMultiFormatReader` with `TRY_HARDER` hint for better detection in low light, glare, or damaged codes. It decodes from the canvas directly, supporting all required formats.
-- **Robustness Enhancements**: 
-  - Increased video resolution to 1920x1080 for better detail.
-  - Added advanced video constraints for auto-exposure (if supported by browser, e.g., iPhone Safari).
-  - Processes every frame continuously (no early stop after detection) to handle challenging conditions by trying multiple frames.
-  - Prefers rear camera with front fallback, as before.
-- **Compatibility**: Works on iPhone (tested with rear camera priority). No breaking changes to existing features (text input, button, Google Sheets integration).
-- **Fallback**: If ZXing fails to load, falls back to original jsQR for QR codes only.
-- **Highlights**: New/updated sections are marked with `// NEW:` or `<!-- NEW:` comments in the code.
-
-### Full Modified index.html Code
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -423,4 +409,3 @@
     </script>
 </body>
 </html>
-```
