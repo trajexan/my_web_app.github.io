@@ -169,8 +169,6 @@
         </table>
         <p id="lastRetrieveTime">Last retrieve time: </p>
     </div>
-    <!-- NEW: Added ZXing library for robust multi-format barcode scanning -->
-    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
     <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -179,6 +177,7 @@
         const CLICK_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD4mYO6UG6wzVNO4pr8VWRVFAuX_bK2uly7uuX8MJznClrR4nqzr3axn1dqva2S1Rm0Q/exec'; // Logs button click timestamps to ClickLogSheet
         const TEXT_INPUT_URL = 'https://script.google.com/macros/s/AKfycbxu8hLb6A8RaoXuxfto6NLUFUM-R9amT2yYzetGGX-miqzZ5SDfV3b3y6RmdUfah-5Z/exec'; // Logs text input to UserInputSheet
         const FETCH_DATA_URL = 'https://script.google.com/macros/s/AKfycbxu8hLb6A8RaoXuxfto6NLUFUM-R9amT2yYzetGGX-miqzZ5SDfV3b3y6RmdUfah-5Z/exec'; // Fetches last 5 inputs from UserInputSheet
+
         document.addEventListener('DOMContentLoaded', function() {
             // Element references
             const video = document.getElementById('video');
@@ -191,6 +190,7 @@
             const successTick = document.getElementById('successTick');
             const loadingIcon = document.getElementById('loadingIcon');
             const clearInput = document.getElementById('clearInput');
+
             // Check for missing elements
             if (!video) { updateDebugStatus('Error: Video element not found'); return; }
             if (!canvas) { updateDebugStatus('Error: Canvas element not found'); return; }
@@ -204,59 +204,47 @@
             if (!loadingIcon) { console.log('Error: loadingIcon element not found'); }
             if (!successTick) { console.log('Error: successTick element not found'); }
             if (!clearInput) { console.log('Error: clearInput element not found'); }
+
             // Helper function to update debug status
             function updateDebugStatus(message) {
                 if (debugStatus) debugStatus.textContent = message;
                 console.log(message);
             }
+
             // Load saved input
             const savedInput = localStorage.getItem('userInput');
             if (savedInput) {
                 textInput.value = savedInput;
             }
+
             // Start camera regardless of jsQR
             updateDebugStatus('Initializing camera...');
             startCamera();
-            // NEW: Initialize ZXing reader for multi-format barcode scanning
-            let reader = null;
-            if (typeof ZXing !== 'undefined') {
-                reader = new ZXing.BrowserMultiFormatReader();
-                reader.setHints({ [ZXing.DecodeHintType.TRY_HARDER]: true }); // NEW: Enable TRY_HARDER for robustness in low light/glare
-                updateDebugStatus('ZXing loaded, starting multi-format barcode scanner...');
-            } else {
-                updateDebugStatus('ZXing not loaded, falling back to jsQR for QR codes only.');
-            }
-            // Verify jsQR is loaded (fallback)
+
+            // Verify jsQR is loaded
             if (typeof jsQR === 'undefined') {
                 updateDebugStatus('Error: jsQR library not loaded. Ensure jsQR.js is in C:\\Users\\cws265\\hello_app or check CDN.');
                 return;
             }
-            updateDebugStatus('jsQR v1.4.0 loaded as fallback...');
+            updateDebugStatus('jsQR v1.4.0 loaded, starting QR scanner...');
+
             // QR Code Scanner
             const context = canvas.getContext('2d');
             if (!context) {
                 updateDebugStatus('Error: Failed to get canvas context');
                 return;
             }
+
             function startCamera(facingMode = 'environment') {
-                // NEW: Enhanced video constraints for higher resolution and auto-exposure (improves robustness on iPhone)
-                const constraints = {
-                    video: {
-                        facingMode: facingMode,
-                        width: { ideal: 1920 }, // NEW: Increased from 1280 for better detail
-                        height: { ideal: 1080 }, // NEW: Increased from 720
-                        advanced: [{ exposureMode: 'continuous' }] // NEW: Auto-exposure for low light (if supported)
-                    }
-                };
-                navigator.mediaDevices.getUserMedia(constraints)
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(stream => {
                         video.srcObject = stream;
                         video.play();
                         updateDebugStatus('Camera started (facing: ' + facingMode + ')');
-                        if (reader || typeof jsQR !== 'undefined') {
-                            scanBarcode(); // NEW: Renamed and updated function
+                        if (typeof jsQR !== 'undefined') {
+                            scanQRCode();
                         } else {
-                            updateDebugStatus('Camera running but no scanner loaded');
+                            updateDebugStatus('Camera running but jsQR not loaded');
                         }
                     })
                     .catch(err => {
@@ -269,66 +257,48 @@
                         }
                     });
             }
-            // NEW: Updated scanning function for multi-format barcodes with robustness
-            function scanBarcode() {
-                updateDebugStatus('Scanning for barcodes...');
+
+            function scanQRCode() {
+                updateDebugStatus('Scanning for QR code...');
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     if (canvas.width === 0 || canvas.height === 0) {
                         updateDebugStatus('Invalid video dimensions: ' + canvas.width + 'x' + canvas.height);
-                        requestAnimationFrame(scanBarcode);
+                        requestAnimationFrame(scanQRCode);
                         return;
                     }
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    let result = null;
-                    if (reader) {
-                        try {
-                            result = reader.decodeFromCanvas(canvas); // NEW: Use ZXing for multi-format decoding
-                            if (result) {
-                                qrResult.value = result.text;
-                                updateDebugStatus('Barcode Detected: ' + result.text + ' (Format: ' + result.format + ')');
-                                // NEW: Continue scanning for robustness (don't stop after one detection)
-                            }
-                        } catch (e) {
-                            // NEW: Fallback to jsQR if ZXing fails
-                            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                            const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                                inversionAttempts: 'attemptBoth'
-                            });
-                            if (code) {
-                                qrResult.value = code.data;
-                                updateDebugStatus('QR Code Detected (fallback): ' + code.data);
-                            }
-                        }
-                    } else {
-                        // Fallback to jsQR only
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: 'attemptBoth'
-                        });
-                        if (code) {
-                            qrResult.value = code.data;
-                            updateDebugStatus('QR Code Detected: ' + code.data);
-                        }
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'attemptBoth'
+                    });
+                    if (code) {
+                        qrResult.value = code.data;
+                        updateDebugStatus('QR Code Detected: ' + code.data);
+                        // Optional: Stop camera (uncomment for single scan)
+                        // video.srcObject.getTracks().forEach(track => track.stop());
+                        return; // Stop scanning after detection
                     }
-                    // NEW: Always continue scanning for multiple frames (robustness)
+                    // Update status periodically
                     if (Math.random() < 0.1) {
-                        updateDebugStatus('Scanning... No barcode detected');
+                        updateDebugStatus('Scanning... No QR code detected');
                     }
                 } else {
                     updateDebugStatus('Video not ready: state ' + video.readyState);
                 }
-                requestAnimationFrame(scanBarcode);
+                requestAnimationFrame(scanQRCode);
             }
+
             // Restart scanning on textbox click
             qrResult.addEventListener('click', function() {
                 if (!video.srcObject) {
-                    qrResult.value = 'Scanning Barcode...'; // NEW: Updated placeholder
+                    qrResult.value = 'Scanning QR Code...';
                     startCamera();
                 }
             });
-            // Button click handler (unchanged)
+
+            // Button click handler
             helloButton.addEventListener('click', function() {
                 alert('Hello World');
                 fetch(CLICK_LOG_URL, {
@@ -346,7 +316,8 @@
                 .catch(error => console.log('Network error: ' + error));
                 window.location.href = 'table.html';
             });
-            // Text input handler (unchanged)
+
+            // Text input handler
             textInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter' || event.keyCode === 13) {
                     const text = this.value.trim();
@@ -377,14 +348,16 @@
                     }
                 }
             });
-            // Clear input button (unchanged)
+
+            // Clear input button
             clearInput.addEventListener('click', function() {
                 textInput.value = '';
                 localStorage.removeItem('userInput');
                 successTick.style.display = 'none';
                 loadingIcon.style.display = 'none';
             });
-            // Fetch user inputs from Google Sheet (unchanged)
+
+            // Fetch user inputs from Google Sheet
             function fetchUserInputs() {
                 fetch(FETCH_DATA_URL)
                     .then(response => response.json())
@@ -403,6 +376,7 @@
                         document.getElementById('lastRetrieveTime').textContent = 'Last retrieve time: Error fetching data';
                     });
             }
+
             fetchUserInputs();
             setInterval(fetchUserInputs, 10000);
         });
