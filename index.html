@@ -10,82 +10,101 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100dvh;
+            flex-direction: column;
+            height: 100vh;
             width: 100vw;
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
             overflow: hidden;
         }
-        .container {
-            display: grid;
-            grid-template-rows: auto auto auto auto auto auto auto auto;
-            align-items: center;
+        .upper-part {
+            display: flex;
+            height: 50vh;
             width: 100%;
+        }
+        .left-top {
+            width: 50%;
             height: 100%;
-            padding: 5px;
-            gap: 5px;
-        }
-        video {
-            width: 100%;
-            max-height: 20vh;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        canvas {
-            display: none; /* Hidden canvas for processing */
-        }
-        input {
-            padding: 5px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 100%;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #debugStatus {
-            font-size: 12px;
-            color: #333;
-            text-align: left;
-            width: 100%;
-            height: 150px; /* Large text box for debug */
             overflow-y: auto;
             border: 1px solid #ccc;
             padding: 5px;
             background-color: #fff;
-            display: block; /* Always show for debugging */
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            display: flex;
+            flex-direction: column-reverse; /* Latest at bottom */
         }
-        #tableContainer {
-            overflow-x: auto;
-            max-width: 100%;
+        .right-top {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        table {
-            border-collapse: collapse;
+        .bottom-part {
+            display: flex;
+            flex-direction: column;
+            height: 50vh;
             width: 100%;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 4px;
-            text-align: left;
-            font-size: 12px;
+        .message-bar {
+            height: 12.5vh; /* 1/8 of 100vh is 12.5vh */
+            width: 100%;
+            border: 1px solid #ccc;
+            padding: 5px;
+            background-color: #fff;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            font-size: 14px;
         }
-        th {
-            background-color: #f2f2f2;
+        .input-box {
+            height: 12.5vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .last-data-box {
+            height: 12.5vh;
+            width: 100%;
+            border: 1px solid #ccc;
+            padding: 5px;
+            background-color: #fff;
+            font-size: 14px;
+        }
+        .capture-button {
+            height: 12.5vh;
+            width: 100%;
+            font-size: 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .capture-button:hover {
+            background-color: #0056b3;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        canvas {
+            display: none;
+        }
+        input {
+            padding: 5px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+        #successTick {
+            margin-left: 5px;
+            color: green;
+            display: none;
+            font-size: 16px;
         }
         #version {
             position: fixed;
@@ -99,86 +118,31 @@
             border-radius: 3px;
             z-index: 1000;
         }
-        .input-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-        .clear-button {
-            margin-left: 5px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #successTick {
-            margin-left: 5px;
-            color: green;
-            display: none;
-        }
-        #loadingIcon {
-            margin-left: 5px;
-            color: #007bff;
-            display: none;
-        }
-        h3 {
-            font-size: 14px;
-            margin: 5px 0;
-        }
-        p {
-            font-size: 12px;
-            margin: 5px 0;
-        }
-        label {
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-        /* Portrait orientation adjustments */
-        @media (orientation: portrait) {
-            .container {
-                gap: 3px;
-            }
-            video {
-                max-height: 30vh;
-            }
-            input, button {
-                font-size: 16px;
-            }
-            label, h3 {
-                font-size: 16px;
-            }
-            p {
-                font-size: 14px;
-            }
-            th, td {
-                font-size: 14px;
-            }
+        .log-entry {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="version">v1.3.6</div>
-    <div class="container">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas"></canvas>
-        <div id="debugStatus">Initializing...</div>
-        <label for="qrResult" style="margin-bottom: 3px;">Scan Result: </label>
-        <div class="input-container">
-            <input id="qrResult" type="text" placeholder="Scanned QR Code" readonly>
-            <button class="clear-button" id="clearQrResult">x</button>
+    <div id="version">v1.3.7</div>
+    <div class="upper-part">
+        <div class="left-top" id="scannedLog"></div>
+        <div class="right-top">
+            <video id="video" autoplay playsinline></video>
         </div>
-        <div class="input-container">
-            <input id="textInput" type="text" placeholder="Type here...">
-            <span id="loadingIcon">⏳</span>
-            <span id="successTick">✓</span>
-            <button class="clear-button" id="clearInput">x</button>
-        </div>
-        <button id="scanButton">Scan Code</button>
-        <div id="tableContainer"></div>
     </div>
-    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
-    <script src="jsQR.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('debugStatus').textContent='Error: Failed to load jsQR CDN.'"></script>
+    <div class="bottom-part">
+        <div class="message-bar" id="messageBar"></div>
+        <div class="input-box">
+            <input id="textInput" type="text" placeholder="Type here or scan...">
+            <span id="successTick">✓</span>
+        </div>
+        <div class="last-data-box" id="lastDataBox">Last data from sheet: </div>
+        <button id="captureButton" class="capture-button">Capture</button>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script src="jsQR.js" onerror="document.getElementById('messageBar').textContent='Error: Failed to load jsQR.js. Check file in C:\\Users\\cws265\\hello_app.'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="document.getElementById('messageBar').textContent='Error: Failed to load jsQR CDN.'"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Google Apps Script URLs
@@ -190,36 +154,24 @@
             // Element references
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
-            const qrResult = document.getElementById('qrResult');
             const textInput = document.getElementById('textInput');
-            const scanButton = document.getElementById('scanButton');
-            const debugStatus = document.getElementById('debugStatus');
-            const version = document.getElementById('version');
             const successTick = document.getElementById('successTick');
-            const loadingIcon = document.getElementById('loadingIcon');
-            const clearInput = document.getElementById('clearInput');
-            const clearQrResult = document.getElementById('clearQrResult');
+            const captureButton = document.getElementById('captureButton');
+            const scannedLog = document.getElementById('scannedLog');
+            const messageBar = document.getElementById('messageBar');
+            const lastDataBox = document.getElementById('lastDataBox');
+            const version = document.getElementById('version');
 
             // Check for missing elements
-            if (!video) { updateDebugStatus('Error: Video element not found'); return; }
-            if (!canvas) { updateDebugStatus('Error: Canvas element not found'); return; }
-            if (!qrResult) { updateDebugStatus('Error: qrResult element not found'); return; }
-            if (!textInput) { updateDebugStatus('Error: textInput element not found'); return; }
-            if (!scanButton) { updateDebugStatus('Error: scanButton element not found'); return; }
-            if (!debugStatus) { updateDebugStatus('Error: debugStatus element not found'); return; }
-            if (!version) { updateDebugStatus('Error: version element not found'); return; }
-            if (!loadingIcon) { updateDebugStatus('Error: loadingIcon element not found'); }
-            if (!successTick) { updateDebugStatus('Error: successTick element not found'); }
-            if (!clearInput) { updateDebugStatus('Error: clearInput element not found'); }
-            if (!clearQrResult) { updateDebugStatus('Error: clearQrResult element not found'); }
-
-            // Helper function to update debug status (prepend new messages)
-            function updateDebugStatus(message) {
-                if (debugStatus) {
-                    debugStatus.textContent = message + '\n' + debugStatus.textContent;
-                    debugStatus.scrollTop = 0; // Stay focused on top row
-                }
-                console.log(message);
+            if (!video) { messageBar.textContent += '\nError: Video element not found'; return; }
+            if (!canvas) { messageBar.textContent += '\nError: Canvas element not found'; return; }
+            if (!textInput) { messageBar.textContent += '\nError: textInput element not found'; return; }
+            if (!captureButton) { messageBar.textContent += '\nError: captureButton element not found'; return; }
+            if (!scannedLog) { messageBar.textContent += '\nError: scannedLog element not found'; return; }
+            if (!messageBar) { console.log('Error: messageBar element not found'); }
+            if (!lastDataBox) { messageBar.textContent += '\nError: lastDataBox element not found'; return; }
+            if (!version) { messageBar.textContent += '\nError: version element not found'; } else {
+                console.log('Version div loaded: v1.3.7');
             }
 
             // Load saved input
@@ -229,16 +181,23 @@
             }
 
             // Start camera
-            updateDebugStatus('Initializing camera...');
             let stream = null;
             let track = null;
             startCamera();
 
-            // Primary scanner: ZXing for all formats
-            const hints = new Map();
-            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E, ZXing.BarcodeFormat.CODE_39, ZXing.BarcodeFormat.ITF]);
-            const codeReader = new ZXing.BrowserMultiFormatReader(hints);
+            // Verify jsQR is loaded
+            if (typeof jsQR === 'undefined') {
+                messageBar.textContent += '\nError: jsQR library not loaded. Ensure jsQR.js is in C:\\Users\\cws265\\hello_app or check CDN.';
+                return;
+            }
+            messageBar.textContent += '\njsQR v1.4.0 loaded, ready for scanning.';
+
+            // QR Code Scanner
+            const context = canvas.getContext('2d');
+            if (!context) {
+                messageBar.textContent += '\nError: Failed to get canvas context';
+                return;
+            }
 
             function startCamera(facingMode = 'environment') {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } })
@@ -247,59 +206,23 @@
                         track = s.getTracks()[0];
                         video.srcObject = stream;
                         video.play();
-                        updateDebugStatus('Camera started (facing: ' + facingMode + ')');
+                        messageBar.textContent += '\nCamera started (facing: ' + facingMode + ')';
                     })
                     .catch(err => {
                         if (facingMode === 'environment') {
-                            updateDebugStatus('Rear camera failed: ' + err.message + '. Trying front camera...');
+                            messageBar.textContent += '\nRear camera failed: ' + err.message + '. Trying front camera...';
                             startCamera('user');
                         } else {
-                            updateDebugStatus('Camera access failed: ' + err.message);
+                            messageBar.textContent += '\nCamera access failed: ' + err.message;
                             qrResult.value = 'Camera error';
                         }
                     });
             }
 
-            let isScanning = false;
-
-            function scanCode() {
-                if (isScanning) return;
-                isScanning = true;
-                updateDebugStatus('Starting scan attempt...');
-                const timeoutId = setTimeout(() => {
-                    isScanning = false;
-                    updateDebugStatus('Scan timed out after 2 seconds');
-                }, 2000);
-
-                codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                    clearTimeout(timeoutId); // Clear timeout on completion
-                    isScanning = false;
-                    if (result) {
-                        qrResult.value = result.text;
-                        updateDebugStatus('Code Detected with ZXing: ' + result.text);
-                        stopCamera();
-                        return;
-                    }
-                    if (err && !(err instanceof ZXing.NotFoundException)) {
-                        console.error(err);
-                        updateDebugStatus('ZXing scanning error: ' + err.message);
-                    }
-                    // Fallback to jsQR if ZXing fails
-                    fallbackJsQR();
-                }).catch(err => {
-                    clearTimeout(timeoutId); // Clear timeout on error
-                    isScanning = false;
-                    console.error(err);
-                    updateDebugStatus('ZXing decode error: ' + err);
-                });
-            }
-
-            function fallbackJsQR() {
-                updateDebugStatus('Falling back to jsQR...');
+            function captureQRCode() {
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
                     canvas.height = video.videoHeight;
                     canvas.width = video.videoWidth;
-                    const context = canvas.getContext('2d');
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                     const code = jsQR(imageData.data, imageData.width, imageData.height, {
@@ -307,26 +230,38 @@
                     });
                     if (code) {
                         qrResult.value = code.data;
-                        updateDebugStatus('QR Code Detected with jsQR fallback: ' + code.data);
+                        messageBar.textContent += '\nQR Code Detected: ' + code.data;
+                        addToLog(code.data);
+                        textInput.value = code.data; // Replace input box with scanned data
                         stopCamera();
                         return;
                     }
-                    updateDebugStatus('No QR detected with jsQR');
+                    messageBar.textContent += '\nNo QR code detected';
                 } else {
-                    updateDebugStatus('Video not ready for jsQR fallback');
+                    messageBar.textContent += '\nVideo not ready for capture';
                 }
-                isScanning = false;
             }
 
+            // Stop camera
             function stopCamera() {
                 if (track) {
                     track.stop();
                 }
             }
 
+            // Resume camera
             function resumeCamera() {
                 qrResult.value = '';
                 startCamera();
+            }
+
+            // Add to scanned log
+            function addToLog(data) {
+                const logEntry = document.createElement('div');
+                logEntry.classList.add('log-entry');
+                logEntry.textContent = data;
+                scannedLog.appendChild(logEntry); // Append to bottom
+                scannedLog.scrollTop = scannedLog.scrollHeight; // Scroll to bottom
             }
 
             // Tap to focus
@@ -353,32 +288,13 @@
                 }
             });
 
-            // Scan button trigger with 2-second timeout
-            scanButton.addEventListener('click', function() {
-                if (video.srcObject && !isScanning) {
-                    scanCode();
+            // Capture button trigger
+            captureButton.addEventListener('click', function() {
+                if (video.srcObject) {
+                    captureQRCode();
                 } else {
-                    updateDebugStatus('Camera not ready or already scanning');
+                    messageBar.textContent += '\nCamera not ready';
                 }
-            });
-
-            // Button click handler (replaced with scan trigger)
-            helloButton.addEventListener('click', function() {
-                alert('Hello World');
-                fetch(CLICK_LOG_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.result === 'success') {
-                        console.log('Click time logged');
-                    } else {
-                        console.log('Error logging click time');
-                    }
-                })
-                .catch(error => console.log('Network error: ' + error));
-                window.location.href = 'table.html';
             });
 
             // Text input handler
@@ -386,7 +302,6 @@
                 if (event.key === 'Enter' || event.keyCode === 13) {
                     const text = this.value.trim();
                     if (text) {
-                        // alert(text.toUpperCase()); // Commented out
                         loadingIcon.style.display = 'inline';
                         successTick.style.display = 'none';
                         fetch(TEXT_INPUT_URL, {
@@ -401,6 +316,7 @@
                                 successTick.style.display = 'inline';
                                 setTimeout(() => { successTick.style.display = 'none'; }, 3000);
                                 localStorage.setItem('userInput', text);
+                                fetchLastData(); // Update last data box
                             } else {
                                 alert('Error saving data');
                             }
@@ -421,28 +337,26 @@
                 loadingIcon.style.display = 'none';
             });
 
-            // Fetch user inputs from Google Sheet
-            function fetchUserInputs() {
+            // Fetch last data from Google Sheet for lastDataBox
+            function fetchLastData() {
                 fetch(FETCH_DATA_URL)
                     .then(response => response.json())
                     .then(data => {
-                        const tableBody = document.getElementById('userInputTable').getElementsByTagName('tbody')[0];
-                        tableBody.innerHTML = '';
-                        data.slice(-5).forEach(row => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `<td>${row.Timestamp || ''}</td><td>${row['User Input'] || ''}</td>`;
-                            tableBody.appendChild(tr);
-                        });
-                        document.getElementById('lastRetrieveTime').textContent = 'Last retrieve time: ' + new Date().toLocaleString();
+                        if (data.length > 0) {
+                            const lastEntry = data[data.length - 1];
+                            lastDataBox.textContent = 'Last data from sheet: ' + (lastEntry['User Input'] || '');
+                        } else {
+                            lastDataBox.textContent = 'Last data from sheet: No data available';
+                        }
                     })
                     .catch(error => {
                         console.log('Error fetching data: ' + error);
-                        document.getElementById('lastRetrieveTime').textContent = 'Last retrieve time: Error fetching data';
+                        lastDataBox.textContent = 'Last data from sheet: Error fetching data';
                     });
             }
 
-            fetchUserInputs();
-            setInterval(fetchUserInputs, 10000);
+            fetchLastData(); // Initial fetch
+            setInterval(fetchLastData, 10000); // Refresh every 10 seconds
         });
     </script>
 </body>
