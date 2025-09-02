@@ -20,7 +20,7 @@
         }
         .upper-part {
             display: flex;
-            height: 50vh;
+            height: 40vh; /* Reduced by 20% from 50vh */
             width: 100%;
         }
         .left-top {
@@ -43,11 +43,11 @@
         .bottom-part {
             display: flex;
             flex-direction: column;
-            height: 50vh;
+            height: 40vh; /* Reduced by 20% from 50vh */
             width: 100%;
         }
         .message-bar {
-            height: 12.5vh; /* 1/8 of 100vh is 12.5vh */
+            height: 10vh; /* Reduced by 20% from 12.5vh */
             width: 100%;
             border: 1px solid #ccc;
             padding: 5px;
@@ -58,13 +58,33 @@
             font-size: 14px;
         }
         .input-box {
-            height: 12.5vh;
+            height: 10vh; /* Reduced by 20% from 12.5vh */
             width: 100%;
             display: flex;
             align-items: center;
         }
+        #textInput {
+            width: 60%;
+            padding: 5px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #sendButton {
+            width: 40%;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        #sendButton:hover {
+            background-color: #218838;
+        }
         .last-data-box {
-            height: 12.5vh;
+            height: 10vh; /* Reduced by 20% from 12.5vh */
             width: 100%;
             border: 1px solid #ccc;
             padding: 5px;
@@ -72,7 +92,7 @@
             font-size: 14px;
         }
         .capture-button {
-            height: 12.5vh;
+            height: 10vh; /* Reduced by 20% from 12.5vh */
             width: 100%;
             font-size: 18px;
             background-color: #007bff;
@@ -89,22 +109,6 @@
             object-fit: cover;
             border: 1px solid #ccc;
             border-radius: 5px;
-        }
-        canvas {
-            display: none;
-        }
-        input {
-            padding: 5px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 100%;
-        }
-        #successTick {
-            margin-left: 5px;
-            color: green;
-            display: none;
-            font-size: 16px;
         }
         #version {
             position: fixed;
@@ -124,7 +128,7 @@
     </style>
 </head>
 <body>
-    <div id="version">v1.3.7</div>
+    <div id="version">v1.3.7a</div>
     <div class="upper-part">
         <div class="left-top" id="scannedLog"></div>
         <div class="right-top">
@@ -135,7 +139,7 @@
         <div class="message-bar" id="messageBar"></div>
         <div class="input-box">
             <input id="textInput" type="text" placeholder="Type here or scan...">
-            <span id="successTick">✓</span>
+            <button id="sendButton">Send</button>
         </div>
         <div class="last-data-box" id="lastDataBox">Last data from sheet: </div>
         <button id="captureButton" class="capture-button">Capture</button>
@@ -155,7 +159,7 @@
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const textInput = document.getElementById('textInput');
-            const successTick = document.getElementById('successTick');
+            const sendButton = document.getElementById('sendButton');
             const captureButton = document.getElementById('captureButton');
             const scannedLog = document.getElementById('scannedLog');
             const messageBar = document.getElementById('messageBar');
@@ -166,12 +170,13 @@
             if (!video) { messageBar.textContent += '\nError: Video element not found'; return; }
             if (!canvas) { messageBar.textContent += '\nError: Canvas element not found'; return; }
             if (!textInput) { messageBar.textContent += '\nError: textInput element not found'; return; }
+            if (!sendButton) { messageBar.textContent += '\nError: sendButton element not found'; return; }
             if (!captureButton) { messageBar.textContent += '\nError: captureButton element not found'; return; }
             if (!scannedLog) { messageBar.textContent += '\nError: scannedLog element not found'; return; }
             if (!messageBar) { console.log('Error: messageBar element not found'); }
             if (!lastDataBox) { messageBar.textContent += '\nError: lastDataBox element not found'; return; }
             if (!version) { messageBar.textContent += '\nError: version element not found'; } else {
-                console.log('Version div loaded: v1.3.7');
+                console.log('Version div loaded: v1.3.7a');
             }
 
             // Load saved input
